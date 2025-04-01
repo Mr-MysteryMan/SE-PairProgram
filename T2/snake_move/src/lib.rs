@@ -62,9 +62,9 @@ pub fn greedySnakeMoveBarriers(spos: &[i32], apos: &[i32], bpos: &[i32]) -> i32 
         bar.push(barrier);
         let barrier = Pos{x: i + 1, y: 0, dir: -1};
         bar.push(barrier);
-        let barrier = Pos{x: 8, y: i + 1, dir: -1};
+        let barrier = Pos{x: 9, y: i + 1, dir: -1};
         bar.push(barrier);
-        let barrier = Pos{x: i + 1, y: 8, dir: -1};
+        let barrier = Pos{x: i + 1, y: 9, dir: -1};
         bar.push(barrier);
     }
     let queue: Vec<Pos> = Vec::new();
