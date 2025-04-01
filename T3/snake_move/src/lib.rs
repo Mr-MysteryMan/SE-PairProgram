@@ -107,27 +107,34 @@ pub fn dir_nobar(src: Pos, bar: Vec<Pos>) -> Vec<i32> {
 #[wasm_bindgen]
 pub fn dir_nosnake(src: Pos, snum: i32, snakes: Vec<Pos>) -> Vec<i32> {
     let mut result: Vec<i32> = Vec::new();
-    for i in 0..snum {
-        let snake = *(&snakes[i as usize]);
-        if !(snake.x == src.x + 1 && snake.y == src.y + 1) 
-        && !(snake.x == src.x - 1 && snake.y == src.y + 1) 
-        && !(snake.x == src.x && snake.y == src.y + 2) {
-            result.push(0);
-        }
-        if !(snake.x == src.x - 1 && snake.y == src.y - 1) 
-        && !(snake.x == src.x - 1 && snake.y == src.y + 1) 
-        && !(snake.x == src.x - 2 && snake.y == src.y) {
-            result.push(1);
-        }
-        if !(snake.x == src.x - 1 && snake.y == src.y - 1) 
-        && !(snake.x == src.x + 1 && snake.y == src.y - 1) 
-        && !(snake.x == src.x && snake.y == src.y - 2) {
-            result.push(2);
-        }
-        if !(snake.x == src.x + 1 && snake.y == src.y + 1) 
-        && !(snake.x == src.x + 1 && snake.y == src.y - 1) 
-        && !(snake.x == src.x + 2 && snake.y == src.y) {
-            result.push(3);
+    if snum == 0 {
+        result.push(0);
+        result.push(1);
+        result.push(2);
+        result.push(3);
+    } else {
+        for i in 0..snum {
+            let snake = *(&snakes[i as usize]);
+            if !(snake.x == src.x + 1 && snake.y == src.y + 1) 
+            && !(snake.x == src.x - 1 && snake.y == src.y + 1) 
+            && !(snake.x == src.x && snake.y == src.y + 2) {
+                result.push(0);
+            }
+            if !(snake.x == src.x - 1 && snake.y == src.y - 1) 
+            && !(snake.x == src.x - 1 && snake.y == src.y + 1) 
+            && !(snake.x == src.x - 2 && snake.y == src.y) {
+                result.push(1);
+            }
+            if !(snake.x == src.x - 1 && snake.y == src.y - 1) 
+            && !(snake.x == src.x + 1 && snake.y == src.y - 1) 
+            && !(snake.x == src.x && snake.y == src.y - 2) {
+                result.push(2);
+            }
+            if !(snake.x == src.x + 1 && snake.y == src.y + 1) 
+            && !(snake.x == src.x + 1 && snake.y == src.y - 1) 
+            && !(snake.x == src.x + 2 && snake.y == src.y) {
+                result.push(3);
+            }
         }
     }
     return result
@@ -150,11 +157,14 @@ pub fn cango(src: Pos, snum: i32, bar: Vec<Pos>, snakes: Vec<Pos>) -> Vec<i32> {
 #[wasm_bindgen]
 pub fn react_to_nodir(dir: i32, can_dir: Vec<i32>) -> i32 {
     if dir == -1 {
-        for i in 0..4 {
-            if can_dir.iter().any(|&p| p == i) {
-                return i
+        if can_dir.len() > 0 {
+            for i in 0..4 {
+                if can_dir.iter().any(|&p| p == i) {
+                    return i
+                }
             }
         }
+        return 0;
     }
     return dir
 }
@@ -165,7 +175,7 @@ pub fn greedy_snake_step(n: i32, spos: &[i32], snum: i32, ospos: &[i32],
     let mut bar = add_barriers(n, spos, snum, ospos, anum, apos);
     let mut queue: Vec<Pos> = Vec::new();
     let mut visited: Vec<Pos> = Vec::new();
-    let mut scores: Vec<i32> = Vec::new();
+    let mut scores: Vec<f32> = Vec::new();
     let mut actions: Vec<i32> = Vec::new();
     for i in 0..anum {
         let src = Pos{x: apos[(2 * i) as usize], y: apos[(2 * i + 1) as usize], dir: -1, dis: -1};
@@ -175,20 +185,20 @@ pub fn greedy_snake_step(n: i32, spos: &[i32], snum: i32, ospos: &[i32],
         visited.clear();
         actions.push(my_exp.dir);
         let my_score = my_exp.dis;
-        let mut min_dis = 999;
+        let mut min_dis = 20;
         for j in 0..snum {
-            let j_dst = Pos{x: ospos[(8 * j) as usize], y: spos[(8 * j + 1) as usize], dir: -1, dis: -1};
-            let j_exp = snake_BFS(src, my_dst, bar.clone(), queue.clone(), visited.clone());
+            let j_dst = Pos{x: ospos[(8 * j) as usize], y: ospos[(8 * j + 1) as usize], dir: -1, dis: -1};
+            let j_exp = snake_BFS(src, j_dst, bar.clone(), queue.clone(), visited.clone());
             queue.clear();
             visited.clear();
             let m = min_dis.min(j_exp.dis);
-            let min_dis = m;
+            min_dis = m;
         }
-        let score =  10 - (20 - my_score) / 20 * 5 + (20 - min_dis) / 20 * 5;
+        let score =  (20 - my_score) as f32 / 20.0 * 5.0 + (20 - min_dis) as f32 / 20.0 * 5.0;
         scores.push(score);
     }
     let mut result = -1;
-    let mut max_score = -999;
+    let mut max_score = -20.0;
     let my_pos = Pos{x: spos[0], y: spos[1], dir: -1, dis: -1};
     let mut snakes: Vec<Pos> = Vec::new();
     for i in 0..snum {
